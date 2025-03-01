@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goodwin IOT App</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .toggle-container {
+            margin: 20px auto;
+            width: 300px;
+        }
+        .toggle-label {
+            display: block;
+            margin: 10px 0;
+            font-size: 20px;
+        }
+        .toggle-btn {
+            width: 80px;
+            height: 40px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+        .on {
+            background-color: green;
+            color: white;
+        }
+        .off {
+            background-color: red;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Goodwin IOT App</h1>
+    
+    <div class="toggle-container">
+        <label class="toggle-label">Relay 1</label>
+        <button id="r1" class="toggle-btn off" onclick="toggleRelay('r1')">OFF</button>
+        
+        <label class="toggle-label">Relay 2</label>
+        <button id="r2" class="toggle-btn off" onclick="toggleRelay('r2')">OFF</button>
+        
+        <label class="toggle-label">Relay 3</label>
+        <button id="r3" class="toggle-btn off" onclick="toggleRelay('r3')">OFF</button>
+        
+        <label class="toggle-label">Relay 4</label>
+        <button id="r4" class="toggle-btn off" onclick="toggleRelay('r4')">OFF</button>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBwchaEICHiyXEeKJNeaAKdwSPt3l5owPQ",
+            authDomain: "iot-app-goodwin.firebaseapp.com",
+            databaseURL: "https://iot-app-goodwin-default-rtdb.firebaseio.com/",
+            projectId: "iot-app-goodwin",
+            storageBucket: "iot-app-goodwin.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Function to toggle relay (0 for ON, 1 for OFF)
+        function toggleRelay(relay) {
+            const relayRef = database.ref("Relay_channel/" + relay);
+            
+            relayRef.once("value").then(snapshot => {
+                let newState = snapshot.val() === 0 ? 1 : 0; // Send 0 for ON, 1 for OFF
+                
+                relayRef.set(newState).then(() => {
+                    updateButtonUI(relay, newState);
+                });
+            });
+        }
+
+        // Function to update button UI
+        function updateButtonUI(relay, state) {
+            let btn = document.getElementById(relay);
+            btn.textContent = state === 0 ? "ON" : "OFF";
+            btn.className = state === 0 ? "toggle-btn on" : "toggle-btn off";
+        }
+
+        // Load existing states from Firebase on page load
+        function loadRelayStates() {
+            const relays = ["r1", "r2", "r3", "r4"];
+            
+            relays.forEach(relay => {
+                const relayRef = database.ref("Relay_channel/" + relay);
+                
+                relayRef.on("value", snapshot => {
+                    if (snapshot.exists()) {
+                        updateButtonUI(relay, snapshot.val());
+                    }
+                });
+            });
+        }
+
+        // Call function to load states on page load
+        window.onload = loadRelayStates;
+    </script>
+
+</body>
+</html>
